@@ -6,7 +6,7 @@ from models.associations.book_work_association import book_work_assoc_table
 class Book(db.Model):
     __tablename__ = "books"
     id = db.Column(db.String, primary_key=True)
-    title = db.Column(db.String)
+    title = db.Column(db.String, nullable=False)
     number_of_pages = db.Column(db.Integer)
     authors = db.relationship(
         "Author",
