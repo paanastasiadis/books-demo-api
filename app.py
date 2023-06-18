@@ -6,11 +6,15 @@
 
 from flask import Flask, jsonify, request
 import requests
-from flask_sqlalchemy import SQLAlchemy
 from db import db
 import requests
-from populate_db import populate_db
+from populate_db import store_books_from_openlib, get_all_books, get_books_by_query
 from config.config import config
+from models.Book import Book
+from models.Author import Author
+from models.Work import Work
+
+from sqlalchemy.orm import joinedload
 
 URL_BASE = "https://openlibrary.org{}.json"
 
@@ -49,7 +53,7 @@ def retrieve_books_from_openlib():
                     for i in range(0, len(book["works"])):
                         work = fetch_data(book["works"][i]["key"])
                         works.append(work)
-                    msg = populate_db(book, authors, works)
+                    msg = store_books_from_openlib(book, authors, works)
 
                     if "error" in msg:
                         skipped_books.append(
@@ -84,9 +88,32 @@ def retrieve_book(book_code):
         return ("An exception occurred: \n{}").format(str(e))
 
 
+@app.route("/books", methods=["GET"])
+def retrieve_books():
+    books = get_all_books()
+
+    return jsonify({"books": books})
+
+
+@app.route("/books/search", methods=["GET"])
+def retrieve_books_by_query():
+    author_name = request.args.get("author")
+    work_title = request.args.get("work")
+    min_pages = request.args.get("min_pages")
+    # Check if at least one query parameter is provided
+    if not author_name and not work_title and not min_pages:
+        return jsonify({"error": "At least one query parameter is required."}), 400
+
+    books = get_books_by_query(author_name, work_title, min_pages)
+
+    return jsonify({"books": books})
+
+
 # Create the database tables if they do not exist
 with app.app_context():
     db.create_all()
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+# John%20Doe&work=Python%20Programming
