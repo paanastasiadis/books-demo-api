@@ -8,11 +8,13 @@ from flask import Flask, jsonify, request
 import requests
 from db import db
 import requests
-from populate_db import store_books_from_openlib, get_all_books, get_books_by_query
+from populate_db import (
+    store_book_from_openlib,
+    get_all_books,
+    get_books_by_query,
+    create_book,
+)
 from config.config import config
-from models.Book import Book
-from models.Author import Author
-from models.Work import Work
 
 from sqlalchemy.orm import joinedload
 
@@ -53,7 +55,7 @@ def retrieve_books_from_openlib():
                     for i in range(0, len(book["works"])):
                         work = fetch_data(book["works"][i]["key"])
                         works.append(work)
-                    msg = store_books_from_openlib(book, authors, works)
+                    msg = store_book_from_openlib(book, authors, works)
 
                     if "error" in msg:
                         skipped_books.append(
@@ -107,6 +109,38 @@ def retrieve_books_by_query():
     books = get_books_by_query(author_name, work_title, min_pages)
 
     return jsonify({"books": books})
+
+
+def are_fields_valid(request_data):
+    # Check if all the required fields are present in the request data
+    if (
+        "id" in request_data
+        and "title" in request_data
+        and "authors" in request_data
+        and "works" in request_data
+    ):
+        for author in request_data["authors"]:
+            if "id" not in author or "name" not in author:
+                return False
+        for work in request_data["works"]:
+            if "id" not in work or "title" not in work:
+                return False
+        return True
+    else:
+        return False
+
+
+@app.route("/books", methods=["POST"])
+def store_book():
+    data = request.get_json()
+    if are_fields_valid(data):
+        try:
+            msg = create_book(data)
+            return jsonify(msg, 200)
+        except Exception as e:
+            return jsonify({data.get("id"): "Book was not inserted due to: {}\n".format(e)})
+    else:
+        return jsonify({"error": "Missing required fields in the request data."}), 400
 
 
 # Create the database tables if they do not exist

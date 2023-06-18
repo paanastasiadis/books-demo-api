@@ -4,10 +4,9 @@ from models.Author import Author
 from models.Work import Work
 from utils.db.get_or_create import get_or_create, get_instance
 from sqlalchemy.orm import joinedload
-from sqlalchemy import func, or_
 
 
-def store_books_from_openlib(book, authors, works):
+def store_book_from_openlib(book, authors, works):
     try:
         book_key = book["key"].split("/")[-1]
 
@@ -17,10 +16,7 @@ def store_books_from_openlib(book, authors, works):
         if existing_book != None:
             return {"error": "Book already in the database"}
         else:
-            if "number_of_pages" in book:
-                number_of_pages = book["number_of_pages"]
-            else:
-                number_of_pages = None
+            number_of_pages = book.get("number_of_pages")
 
             new_book = Book(
                 id=book_key, title=book["title"], number_of_pages=number_of_pages
@@ -103,3 +99,55 @@ def get_books_by_query(author_name, work_title, min_pages):
     books_query = query.all()
 
     return construct_book_list(books_query)
+
+
+def create_book(data):
+    try:
+        # Extract the necessary fields for creating a new book
+        book_id = data.get("id")
+        title = data.get("title")
+        number_of_pages = data.get("number_of_pages")
+        authors = data.get("authors", [])
+        works = data.get("works", [])
+
+        # Create a new Book instance
+        new_book = Book(id=book_id, title=title, number_of_pages=number_of_pages)
+
+        # check if the book already exists
+        existing_book = get_instance(db.session, Book, id=book_id)
+
+        if existing_book != None:
+            return {"error": "Book already in the database"}
+        else:
+            # Add authors to the new book
+            for author in authors:
+                author_id = author.get("id")
+                author_name = author.get("name")
+
+                new_author = get_or_create(
+                    db.session, Author, id=author_id, name=author_name
+                )
+                new_book.authors.append(new_author)
+
+                # Add the author to the session
+                db.session.add(new_author)
+
+            # Add works to the new book
+            for work in works:
+                work_id = work.get("id")
+                work_title = work.get("title")
+
+                new_work = get_or_create(db.session, Work, id=work_id, title=work_title)
+                new_book.works.append(new_work)
+
+                # Add the author to the session
+                db.session.add(new_work)
+
+            # Add the new book to the database session
+            db.session.add(new_book)
+            db.session.commit()
+
+            return {"success": "Book {} was inserted successfully.".format(book_id)}
+    except Exception as e:
+        db.session.rollback()
+        return {"error": str(e)}
