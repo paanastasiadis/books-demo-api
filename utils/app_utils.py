@@ -1,3 +1,10 @@
+"""
+Utility functions for the application.
+
+- fetch_data(code): Fetches data from the specified code using an API request.
+- validate_create_book_req_data(request_data): Validates if the required fields are present in the request data.
+"""
+
 import requests
 
 URL_BASE = "https://openlibrary.org{}.json"
@@ -9,7 +16,8 @@ def fetch_data(code):
 
     return response.json()
 
-def are_fields_valid(request_data):
+def validate_create_book_req_data(request_data):
+    
     # Check if all the required fields are present in the request data
     if (
         "id" in request_data

@@ -1,54 +1,51 @@
-# pylint: disable=missing-module-docstring
-# pylint: disable=missing-class-docstring
-# pylint: disable=missing-function-docstring
-
-""" Wings assignment """
-
 from flask import Flask, jsonify, request
 from db import db
-from db_operations import (
-    store_book_from_openlib,
-    get_all_books,
-    get_books_by_query,
-    create_book,
-    delete_book_from_db,
-)
-from utils.app_utils import fetch_data, are_fields_valid
+import db_operations
+from utils.app_utils import fetch_data, validate_create_book_req_data
 from config.config import config
-from sqlalchemy.orm import joinedload
-
 
 app = Flask(__name__)
 app.config.update(config)
 db.init_app(app)
 
 
+@app.route("/store_openlib_books", methods=["POST"])
+def store_openlib_books():
+    """
+    Endpoint handler for storing books from OpenLibrary.
+    """
 
-@app.route("/retrieve_openlib_books", methods=["POST"])
-def retrieve_books_from_openlib():
+    # Get the book data from the request
     data = request.get_json()
 
     if "codes" in data:
-        skipped_books = []
-        added_books = []
+        skipped_books = []  # List to store skipped books
+        added_books = []  # List to store successfully added books
 
         for code in data["codes"]:
             try:
+                # Fetch data for the book using the provided code
                 book = fetch_data("/books/" + code)
 
                 if "authors" in book and "works" in book:
                     authors = []
+                    # Fetch data for each author associated with the book
                     for i in range(0, len(book["authors"])):
                         author = fetch_data(book["authors"][i]["key"])
                         authors.append(author)
 
                     works = []
+                    # Fetch data for each work associated with the book
                     for i in range(0, len(book["works"])):
                         work = fetch_data(book["works"][i]["key"])
                         works.append(work)
+
+                    # Update the book data with the fetched author and work data
                     book["authors"] = authors
                     book["works"] = works
-                    msg = store_book_from_openlib(book)
+
+                    # Store the book in the database
+                    msg = db_operations.store_book(book, from_openlib=True)
 
                     if "error" in msg:
                         skipped_books.append(
@@ -72,33 +69,51 @@ def retrieve_books_from_openlib():
 
 
 @app.route("/books", methods=["GET"])
-def retrieve_books():
-    books = get_all_books()
+def get_all_books():
+    """
+    Endpoint handler for retrieving all books from the database.
+    """
+    # Retrieve all books from the database
+    books = db_operations.retrieve_all_books()
 
     return jsonify({"books": books})
 
 
 @app.route("/books/search", methods=["GET"])
-def retrieve_books_by_query():
+def search_books():
+    """
+    Endpoint handler for searching books based on specified criteria:
+        -(author or/and work or/and number of pages)
+    """
+
+    # Get the query parameters from the request
     author_name = request.args.get("author")
     work_title = request.args.get("work")
     min_pages = request.args.get("min_pages")
+
     # Check if at least one query parameter is provided
     if not author_name and not work_title and not min_pages:
         return jsonify({"error": "At least one query parameter is required."}), 400
 
-    books = get_books_by_query(author_name, work_title, min_pages)
+    # Retrieve books based on the specified criteria
+    books = db_operations.retrieve_books_by_criteria(author_name, work_title, min_pages)
 
     return jsonify({"books": books})
 
 
-
 @app.route("/books", methods=["POST"])
-def store_book():
+def create_book():
+    """
+    Endpoint handler for creating a new book entry.
+    """
+    # Get the book data from the request
     data = request.get_json()
-    if are_fields_valid(data):
+
+    # Check if the required fields are valid
+    if validate_create_book_req_data(data):
         try:
-            msg = create_book(data)
+            # Store the book in the database
+            msg = db_operations.store_book(data, from_openlib=False)
             return jsonify(msg, 200)
         except Exception as e:
             return jsonify(
@@ -108,10 +123,14 @@ def store_book():
         return jsonify({"error": "Missing required fields in the request data."}), 400
 
 
-# Endpoint to delete a book
 @app.route("/books/<book_id>", methods=["DELETE"])
 def delete_book(book_id):
-    msg = delete_book_from_db(book_id)
+    """
+    Endpoint handler for deleting a book.
+    """
+    
+    # Remove the book from the database
+    msg = db_operations.remove_book(book_id)
 
     if msg == None:
         return jsonify({"error": "Book not found."}), 404
