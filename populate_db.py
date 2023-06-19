@@ -151,3 +151,32 @@ def create_book(data):
     except Exception as e:
         db.session.rollback()
         return {"error": str(e)}
+
+
+def delete_book_from_db(book_id):
+    book = get_instance(db.session, Book, id=book_id)
+
+    if not book:
+        return None
+
+    try:
+        authors = [author for author in book.authors]
+        works = [work for work in book.works]
+        # Remove the book from its associated authors
+        for author in authors:
+            author.books.remove(book)
+            if len(author.books) < 1:
+                db.session.delete(author)
+
+        for work in works:
+            work.books.remove(book)
+            if len(work.books) < 1:
+                db.session.delete(work)
+
+        # Delete the book from the database
+        db.session.delete(book)
+        db.session.commit()
+        return {"success": "Book deleted successfully."}
+    except Exception as e:
+        db.session.rollback()
+        return {"error": "Book was not deleted. Reason: {}.".format(e)}

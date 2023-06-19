@@ -12,13 +12,11 @@ class Book(db.Model):
         "Author",
         secondary=book_author_assoc_table,
         back_populates="books",
-        cascade="all, delete",
     )
     works = db.relationship(
         "Work",
         back_populates="books",
         secondary=book_work_assoc_table,
-        cascade="all, delete",
     )
 
     def __init__(self, id, title, number_of_pages):

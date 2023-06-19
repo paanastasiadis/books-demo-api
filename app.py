@@ -13,6 +13,7 @@ from populate_db import (
     get_all_books,
     get_books_by_query,
     create_book,
+    delete_book_from_db,
 )
 from config.config import config
 
@@ -138,9 +139,25 @@ def store_book():
             msg = create_book(data)
             return jsonify(msg, 200)
         except Exception as e:
-            return jsonify({data.get("id"): "Book was not inserted due to: {}\n".format(e)})
+            return jsonify(
+                {data.get("id"): "Book was not inserted due to: {}".format(e)}
+            )
     else:
         return jsonify({"error": "Missing required fields in the request data."}), 400
+
+
+# Endpoint to delete a book
+@app.route("/books/<book_id>", methods=["DELETE"])
+def delete_book(book_id):
+    msg = delete_book_from_db(book_id)
+
+    if msg == None:
+        return jsonify({"error": "Book not found."}), 404
+
+    if msg.get("error"):
+        return jsonify(msg), 404
+    else:
+        return jsonify(msg), 200
 
 
 # Create the database tables if they do not exist
@@ -149,5 +166,3 @@ with app.app_context():
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-# John%20Doe&work=Python%20Programming
