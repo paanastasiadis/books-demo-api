@@ -1,3 +1,17 @@
+"""
+Book API.
+
+This Flask application provides endpoints for managing books, including storing books from OpenLibrary, retrieving books, searching books based on criteria, creating new book entries, and deleting books.
+
+Endpoints:
+
+/store_openlib_books: Stores books from OpenLibrary.
+/books: Retrieves all books from the database.
+/books/search: Searches books based on specified criteria (author, work, number of pages).
+/books: Creates a new book entry.
+/books/<book_id>: Deletes a book.
+"""
+
 from flask import Flask, jsonify, request
 from db import db
 import db_operations
