@@ -57,9 +57,29 @@ Method: `DELETE`
 * Path Parameter: book_id - ID of the book to be deleted.
 * Response: JSON object with the status of the book deletion.
 
+## Models
+
+The models below represent the ORM (Object-Relational Mapping) structure of the API. They define the database tables and relationships between entities.
+
+### Book Model
+
+Represents a book with an ID, title, and number of pages.
+Relates to authors and works in a many-to-many relationship.
+
+### Author Model
+
+Represents an author with an ID and name.
+Relates to books in a many-to-many relationship.
+
+### Work Model
+
+Represents a work with an ID and title.
+Relates to books in a many-to-many relationship.
+These ORM models define the database schema and relationships used by the API to interact with the underlying database.
+
 ## Dockerized Deployment
 
-The application can be easily deployed using Docker and Docker Compose. The provided docker-compose.yml file sets up a Docker container for the Book API and a Docker container running PostgreSQL as the database.
+The application can be easily deployed using Docker and Docker Compose. The provided `docker-compose.yml` file sets up a Docker container for the Book API and a Docker container running PostgreSQL as the database.
 
 ## Running the application
 
@@ -73,7 +93,7 @@ The application can be easily deployed using Docker and Docker Compose. The prov
 6. Run the following command to start the application:
 
     ```bash
-    docker-compose up -d
+    docker compose up -d
     ```
 
 7. Wait for the containers to start up.
@@ -83,7 +103,7 @@ The application can be easily deployed using Docker and Docker Compose. The prov
 9. To stop the application and remove the containers, run:
 
     ```bash
-    docker-compose down
+    docker compose down
     ```
 
 ## Running Unit Tests
