@@ -79,7 +79,7 @@ def store_openlib_books():
             200,
         )
     else:
-        return jsonify({"error": "Invalid code list provided."}), 400
+        return jsonify({"error": "Invalid code list provided."}, 400)
 
 
 @app.route("/books", methods=["GET"])
@@ -90,7 +90,7 @@ def get_all_books():
     # Retrieve all books from the database
     books = db_operations.retrieve_all_books()
 
-    return jsonify({"books": books})
+    return jsonify({"books": books}, 200)
 
 
 @app.route("/books/search", methods=["GET"])
@@ -107,7 +107,7 @@ def search_books():
 
     # Check if at least one query parameter is provided
     if not author_name and not work_title and not min_pages:
-        return jsonify({"error": "At least one query parameter is required."}), 400
+        return jsonify({"error": "At least one query parameter is required."}, 400)
 
     # Retrieve books based on the specified criteria
     books = db_operations.retrieve_books_by_criteria(author_name, work_title, min_pages)
@@ -131,10 +131,10 @@ def create_book():
             return jsonify(msg, 200)
         except Exception as e:
             return jsonify(
-                {data.get("id"): "Book was not inserted due to: {}".format(e)}
+                {data.get("id"): "Book was not inserted due to: {}".format(e)}, 500
             )
     else:
-        return jsonify({"error": "Missing required fields in the request data."}), 400
+        return jsonify({"error": "Missing required fields in the request data."}, 400)
 
 
 @app.route("/books/<book_id>", methods=["DELETE"])
@@ -147,12 +147,12 @@ def delete_book(book_id):
     msg = db_operations.remove_book(book_id)
 
     if msg == None:
-        return jsonify({"error": "Book not found."}), 404
+        return jsonify({"error": "Book not found."}, 404)
 
     if msg.get("error"):
-        return jsonify(msg), 500
+        return jsonify(msg, 500)
     else:
-        return jsonify(msg), 200
+        return jsonify(msg, 200)
 
 
 # Create the database tables if they do not exist

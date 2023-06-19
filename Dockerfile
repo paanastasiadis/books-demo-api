@@ -13,6 +13,7 @@ COPY db_operations.py .
 COPY config/ /app/config/
 COPY models/ /app/models/
 COPY utils/ /app/utils/
+COPY tests.py .
 
 ENV PATH="/app:${PATH}"
 RUN export $(cat .env | xargs)
