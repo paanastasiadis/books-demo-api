@@ -5,9 +5,7 @@
 """ Wings assignment """
 
 from flask import Flask, jsonify, request
-import requests
 from db import db
-import requests
 from db_operations import (
     store_book_from_openlib,
     get_all_books,
@@ -15,23 +13,15 @@ from db_operations import (
     create_book,
     delete_book_from_db,
 )
+from utils.app_utils import fetch_data, are_fields_valid
 from config.config import config
-
 from sqlalchemy.orm import joinedload
 
-URL_BASE = "https://openlibrary.org{}.json"
 
 app = Flask(__name__)
 app.config.update(config)
 db.init_app(app)
 
-
-def fetch_data(code):
-    url = URL_BASE.format(code)
-    response = requests.get(url)
-    response.raise_for_status()  # Raise an exception for non-2xx status codes
-
-    return response.json()
 
 
 @app.route("/retrieve_openlib_books", methods=["POST"])
@@ -58,7 +48,6 @@ def retrieve_books_from_openlib():
                         works.append(work)
                     book["authors"] = authors
                     book["works"] = works
-                    print(book["authors"])
                     msg = store_book_from_openlib(book)
 
                     if "error" in msg:
@@ -102,24 +91,6 @@ def retrieve_books_by_query():
 
     return jsonify({"books": books})
 
-
-def are_fields_valid(request_data):
-    # Check if all the required fields are present in the request data
-    if (
-        "id" in request_data
-        and "title" in request_data
-        and "authors" in request_data
-        and "works" in request_data
-    ):
-        for author in request_data["authors"]:
-            if "id" not in author or "name" not in author:
-                return False
-        for work in request_data["works"]:
-            if "id" not in work or "title" not in work:
-                return False
-        return True
-    else:
-        return False
 
 
 @app.route("/books", methods=["POST"])

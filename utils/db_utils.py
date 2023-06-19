@@ -74,8 +74,6 @@ def create_book_list_from_query(books_query):
         authors = [{"id": author.id, "name": author.name} for author in book.authors]
         works = [{"id": work.id, "title": work.title} for work in book.works]
 
-        print(book.number_of_pages)
-
         book_data = {
             "id": book.id,
             "title": book.title,
