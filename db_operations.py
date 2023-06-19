@@ -138,7 +138,7 @@ def remove_book(book_id):
         # Delete the book from the database
         db.session.delete(book)
         db.session.commit()
-        return {"success": "Book {} was deleted successfully.".format(book.get("id"))}
+        return {"success": "Book {} was deleted successfully.".format(book_id)}
     except Exception as e:
         # Roll back the database session in case of an exception
         db.session.rollback()

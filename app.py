@@ -150,7 +150,7 @@ def delete_book(book_id):
         return jsonify({"error": "Book not found."}), 404
 
     if msg.get("error"):
-        return jsonify(msg), 404
+        return jsonify(msg), 500
     else:
         return jsonify(msg), 200
 
