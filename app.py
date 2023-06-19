@@ -82,18 +82,6 @@ def retrieve_books_from_openlib():
         return jsonify({"error": "Invalid code list provided."}), 400
 
 
-# Database population script
-@app.route("/retrieve_book/<book_code>", methods=["POST"])
-def retrieve_book(book_code):
-    try:
-        data = fetch_data("/books/" + book_code)
-        # Process the data returned by fetch_data() if no exception occurred
-        return ("Data: \n{}").format(str(data))
-    except Exception as e:
-        # Handle the exception
-        return ("An exception occurred: \n{}").format(str(e))
-
-
 @app.route("/books", methods=["GET"])
 def retrieve_books():
     books = get_all_books()
