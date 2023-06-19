@@ -8,7 +8,7 @@ from flask import Flask, jsonify, request
 import requests
 from db import db
 import requests
-from populate_db import (
+from db_operations import (
     store_book_from_openlib,
     get_all_books,
     get_books_by_query,
@@ -56,7 +56,10 @@ def retrieve_books_from_openlib():
                     for i in range(0, len(book["works"])):
                         work = fetch_data(book["works"][i]["key"])
                         works.append(work)
-                    msg = store_book_from_openlib(book, authors, works)
+                    book["authors"] = authors
+                    book["works"] = works
+                    print(book["authors"])
+                    msg = store_book_from_openlib(book)
 
                     if "error" in msg:
                         skipped_books.append(
